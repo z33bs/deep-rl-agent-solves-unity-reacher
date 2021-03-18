@@ -1,13 +1,16 @@
 import numpy as np
 import torch
 from torch.optim import Adam
-import gym
+# import gym
 import time
-import spinup.algos.pytorch.ppo.core as core
-from spinup.utils.logx import EpochLogger
-from spinup.utils.mpi_pytorch import setup_pytorch_for_mpi, sync_params, mpi_avg_grads
-from spinup.utils.mpi_tools import mpi_fork, mpi_avg, proc_id, mpi_statistics_scalar, num_procs
-
+import core
+from logx import EpochLogger
+# from spinup.utils.mpi_pytorch import setup_pytorch_for_mpi, sync_params, mpi_avg_grads
+# from spinup.utils.mpi_tools import mpi_fork, mpi_avg, proc_id, mpi_statistics_scalar, num_procs
+from user_config import DEFAULT_DATA_DIR, FORCE_DATESTAMP, \
+                               DEFAULT_SHORTHAND, WAIT_BEFORE_LAUNCH
+import os.path as osp
+from unityagents import UnityEnvironment
 
 class PPOBuffer:
     """
@@ -60,11 +63,15 @@ class PPOBuffer:
         vals = np.append(self.val_buf[path_slice], last_val)
         
         # the next two lines implement GAE-Lambda advantage calculation
-        deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
+        # GAedit?
+        # deltas = rews[:-1] + self.gamma * vals[1:] - vals[:-1]
+        deltas = rews[:-20] + self.gamma * vals[20:] - vals[:-20]
         self.adv_buf[path_slice] = core.discount_cumsum(deltas, self.gamma * self.lam)
         
         # the next line computes rewards-to-go, to be targets for the value function
-        self.ret_buf[path_slice] = core.discount_cumsum(rews, self.gamma)[:-1]
+        # GAedit?
+        # self.ret_buf[path_slice] = core.discount_cumsum(rews, self.gamma)[:-1]
+        self.ret_buf[path_slice] = core.discount_cumsum(rews, self.gamma)[:-20]
         
         self.path_start_idx = self.ptr
 
@@ -76,9 +83,15 @@ class PPOBuffer:
         """
         assert self.ptr == self.max_size    # buffer has to be full before you can get
         self.ptr, self.path_start_idx = 0, 0
-        # the next two lines implement the advantage normalization trick
-        adv_mean, adv_std = mpi_statistics_scalar(self.adv_buf)
-        self.adv_buf = (self.adv_buf - adv_mean) / adv_std
+        # GAedit
+        # the next three lines implement the advantage normalization trick
+        # adv_mean, adv_std = mpi_statistics_scalar(self.adv_buf)
+        # self.adv_buf = (self.adv_buf - adv_mean) / adv_std
+        mean = np.mean(self.adv_buf)
+        std = np.std(self.adv_buf) + 1.0e-10
+        # self.adv_buf = (self.adv_buf - mean[:, np.newaxis]) / std[:, np.newaxis]
+        self.adv_buf = (self.adv_buf - mean) / std
+
         data = dict(obs=self.obs_buf, act=self.act_buf, ret=self.ret_buf,
                     adv=self.adv_buf, logp=self.logp_buf)
         return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in data.items()}
@@ -192,36 +205,57 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
     """
 
+    # GAedit
     # Special function to avoid certain slowdowns from PyTorch + MPI combo.
-    setup_pytorch_for_mpi()
+    # setup_pytorch_for_mpi()
 
     # Set up logger and save configuration
     logger = EpochLogger(**logger_kwargs)
     logger.save_config(locals())
 
-    # Random seed
-    seed += 10000 * proc_id()
+    # GAedit
+    # Seed
+    seed = 333
     torch.manual_seed(seed)
     np.random.seed(seed)
 
     # Instantiate environment
     env = env_fn()
-    obs_dim = env.observation_space.shape
-    act_dim = env.action_space.shape
+    #GAedit
+    # obs_dim = env.observation_space.shape
+    # act_dim = env.action_space.shape
+    # get the default brain
+    brain_name = env.brain_names[0]
+    brain = env.brains[brain_name]
+    # reset the environment
+    env_info = env.reset(train_mode=True)[brain_name]
+    # number of agents
+    num_agents = len(env_info.agents)
+    # size of each action
+    act_dim = brain.vector_action_space_size
+    # examine the state space
+    obs_dim = env_info.vector_observations.shape[1]
 
+    #GAedit
     # Create actor-critic module
-    ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
+    # ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
+    ac = actor_critic(obs_dim, act_dim, **ac_kwargs)
 
+    # GAedit - don't think we need to sync
     # Sync params across processes
-    sync_params(ac)
+    # sync_params(ac)
 
     # Count variables
     var_counts = tuple(core.count_vars(module) for module in [ac.pi, ac.v])
     logger.log('\nNumber of parameters: \t pi: %d, \t v: %d\n'%var_counts)
 
     # Set up experience buffer
-    local_steps_per_epoch = int(steps_per_epoch / num_procs())
-    buf = PPOBuffer(obs_dim, act_dim, local_steps_per_epoch, gamma, lam)
+    # GAedit
+    # local_steps_per_epoch = int(steps_per_epoch / num_procs())
+    local_steps_per_epoch = int(steps_per_epoch / num_agents)
+    #GAedit
+    buf = PPOBuffer(obs_dim, act_dim, local_steps_per_epoch*num_agents, gamma, lam)
+    # buf = PPOBuffer(obs_dim, act_dim, local_steps_per_epoch, gamma, lam)
 
     # Set up function for computing PPO policy loss
     def compute_loss_pi(data):
@@ -265,12 +299,16 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         for i in range(train_pi_iters):
             pi_optimizer.zero_grad()
             loss_pi, pi_info = compute_loss_pi(data)
-            kl = mpi_avg(pi_info['kl'])
+            #GAedit
+            # kl = mpi_avg(pi_info['kl'])
+            kl = pi_info['kl']
             if kl > 1.5 * target_kl:
                 logger.log('Early stopping at step %d due to reaching max kl.'%i)
                 break
             loss_pi.backward()
-            mpi_avg_grads(ac.pi)    # average grads across MPI processes
+            #GAedit
+            # mpi_avg_grads(ac.pi)    # average grads across MPI processes
+            # ac.pi.mean()
             pi_optimizer.step()
 
         logger.store(StopIter=i)
@@ -280,7 +318,8 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             vf_optimizer.zero_grad()
             loss_v = compute_loss_v(data)
             loss_v.backward()
-            mpi_avg_grads(ac.v)    # average grads across MPI processes
+            #GAedit
+            # mpi_avg_grads(ac.v)    # average grads across MPI processes
             vf_optimizer.step()
 
         # Log changes from update
@@ -292,26 +331,38 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
     # Prepare for interaction with environment
     start_time = time.time()
-    o, ep_ret, ep_len = env.reset(), 0, 0
-
+    #GAedit
+    # o, ep_ret, ep_len = env.reset(), 0, 0
+    ep_ret, ep_len = 0, 0
+    env_info = env.reset(train_mode=True)[brain_name]
+    o = env_info.vector_observations
     # Main loop: collect experience in env and update/log each epoch
     for epoch in range(epochs):
         for t in range(local_steps_per_epoch):
             a, v, logp = ac.step(torch.as_tensor(o, dtype=torch.float32))
-
-            next_o, r, d, _ = env.step(a)
-            ep_ret += r
+            # GAedit
+            # next_o, r, d, _ = env.step(a)
+            env_info = env.step(a)[brain_name]
+            next_o, r, d = env_info.vector_observations, env_info.rewards, env_info.local_done
+            #GAedit
+            # ep_ret += r
+            ep_ret += np.mean(r)
             ep_len += 1
 
             # save and log
-            buf.store(o, a, r, v, logp)
+            #GAedit
+            # buf.store(o, a, r, v, logp)
+            for i in range(20):
+                buf.store(o[i], a[i], r[i], v[i], logp[i])
             logger.store(VVals=v)
             
             # Update obs (critical!)
             o = next_o
 
             timeout = ep_len == max_ep_len
-            terminal = d or timeout
+            # GAedit
+            # terminal = d or timeout
+            terminal = any(d) or timeout
             epoch_ended = t==local_steps_per_epoch-1
 
             if terminal or epoch_ended:
@@ -326,8 +377,11 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 if terminal:
                     # only save EpRet / EpLen if trajectory finished
                     logger.store(EpRet=ep_ret, EpLen=ep_len)
-                o, ep_ret, ep_len = env.reset(), 0, 0
-
+                # GAedit
+                # o, ep_ret, ep_len = env.reset(), 0, 0
+                ep_ret, ep_len = 0, 0
+                env_info = env.reset(train_mode=True)[brain_name]
+                o = env_info.vector_observations
 
         # Save model
         if (epoch % save_freq == 0) or (epoch == epochs-1):
@@ -353,10 +407,74 @@ def ppo(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         logger.log_tabular('Time', time.time()-start_time)
         logger.dump_tabular()
 
+
+def setup_logger_kwargs(exp_name, seed=None, data_dir=None, datestamp=False):
+    """
+    Sets up the output_dir for a logger and returns a dict for logger kwargs.
+
+    If no seed is given and datestamp is false,
+
+    ::
+
+        output_dir = data_dir/exp_name
+
+    If a seed is given and datestamp is false,
+
+    ::
+
+        output_dir = data_dir/exp_name/exp_name_s[seed]
+
+    If datestamp is true, amend to
+
+    ::
+
+        output_dir = data_dir/YY-MM-DD_exp_name/YY-MM-DD_HH-MM-SS_exp_name_s[seed]
+
+    You can force datestamp=True by setting ``FORCE_DATESTAMP=True`` in
+    ``spinup/user_config.py``.
+
+    Args:
+
+        exp_name (string): Name for experiment.
+
+        seed (int): Seed for random number generators used by experiment.
+
+        data_dir (string): Path to folder where results should be saved.
+            Default is the ``DEFAULT_DATA_DIR`` in ``spinup/user_config.py``.
+
+        datestamp (bool): Whether to include a date and timestamp in the
+            name of the save directory.
+
+    Returns:
+
+        logger_kwargs, a dict containing output_dir and exp_name.
+    """
+
+    # Datestamp forcing
+    datestamp = datestamp or FORCE_DATESTAMP
+
+    # Make base path
+    ymd_time = time.strftime("%Y-%m-%d_") if datestamp else ''
+    relpath = ''.join([ymd_time, exp_name])
+
+    if seed is not None:
+        # Make a seed-specific subfolder in the experiment directory.
+        if datestamp:
+            hms_time = time.strftime("%Y-%m-%d_%H-%M-%S")
+            subfolder = ''.join([hms_time, '-', exp_name, '_s', str(seed)])
+        else:
+            subfolder = ''.join([exp_name, '_s', str(seed)])
+        relpath = osp.join(relpath, subfolder)
+
+    data_dir = data_dir or DEFAULT_DATA_DIR
+    logger_kwargs = dict(output_dir=osp.join(data_dir, relpath),
+                         exp_name=exp_name)
+    return logger_kwargs
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='HalfCheetah-v2')
+    parser.add_argument('--env', type=str, default='Reacher.app')
     parser.add_argument('--hid', type=int, default=64)
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--gamma', type=float, default=0.99)
@@ -367,12 +485,18 @@ if __name__ == '__main__':
     parser.add_argument('--exp_name', type=str, default='ppo')
     args = parser.parse_args()
 
-    mpi_fork(args.cpu)  # run parallel code with mpi
+    #GAedit
+    # mpi_fork(args.cpu)  # run parallel code with mpi
 
-    from spinup.utils.run_utils import setup_logger_kwargs
     logger_kwargs = setup_logger_kwargs(args.exp_name, args.seed)
 
-    ppo(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
-        ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), gamma=args.gamma, 
+    #GAedit
+    # ppo(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
+    #     ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), gamma=args.gamma,
+    #     seed=args.seed, steps_per_epoch=args.steps, epochs=args.epochs,
+    #     logger_kwargs=logger_kwargs)
+
+    ppo(lambda : UnityEnvironment(file_name=args.env), actor_critic=core.MLPActorCritic,
+        ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), gamma=args.gamma,
         seed=args.seed, steps_per_epoch=args.steps, epochs=args.epochs,
         logger_kwargs=logger_kwargs)

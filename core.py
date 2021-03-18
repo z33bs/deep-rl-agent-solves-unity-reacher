@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.signal
-from gym.spaces import Box, Discrete
+# from gym.spaces import Box, Discrete
 
 import torch
 import torch.nn as nn
@@ -107,18 +107,18 @@ class MLPCritic(nn.Module):
 
 class MLPActorCritic(nn.Module):
 
-
-    def __init__(self, observation_space, action_space, 
+# GAedit
+    def __init__(self, obs_dim, action_dim,
                  hidden_sizes=(64,64), activation=nn.Tanh):
         super().__init__()
 
-        obs_dim = observation_space.shape[0]
+        # obs_dim = observation_space.shape[0]
 
         # policy builder depends on action space
-        if isinstance(action_space, Box):
-            self.pi = MLPGaussianActor(obs_dim, action_space.shape[0], hidden_sizes, activation)
-        elif isinstance(action_space, Discrete):
-            self.pi = MLPCategoricalActor(obs_dim, action_space.n, hidden_sizes, activation)
+        # if isinstance(action_space, Box):
+        self.pi = MLPGaussianActor(obs_dim, action_dim, hidden_sizes, activation)
+        # elif isinstance(action_space, Discrete):
+        #     self.pi = MLPCategoricalActor(obs_dim, action_dim, hidden_sizes, activation)
 
         # build value function
         self.v  = MLPCritic(obs_dim, hidden_sizes, activation)
