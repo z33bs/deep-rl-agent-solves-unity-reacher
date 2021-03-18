@@ -1,0 +1,2 @@
+unityagents==0.4.0 #required to be compatible with custom reacher environment
+torch
