@@ -1,14 +1,5 @@
 import torch
 import numpy as np
-# from ..utils import *
-# import torch.multiprocessing as mp
-# from collections import deque
-# from skimage.io import imsave
-
-# from ..network import *
-# from ..component import *
-# from .BaseAgent import *
-
 from buffer import Storage
 from policy_models_v2 import GaussianActorCriticNet, FCBody
 from unity_environment import Env
@@ -17,32 +8,21 @@ import pickle
 import torch.nn as nn
 import logger
 
+
 class BaseAgent:
     def __init__(self, config):
         self.config = config
         self.logger = logger.get_logger(tag=config.tag, log_level=config.log_level)
         self.task_ind = 0
 
-    def close_obj(obj):
-        if hasattr(obj, 'close'):
-            obj.close()
-
-    def close(self):
-        self.close_obj(self.task)
-
     def save(self, filename):
         torch.save(self.network.state_dict(), '%s.model' % (filename))
-        with open('%s.stats' % (filename), 'wb') as f:
-            pickle.dump(self.config.state_normalizer.state_dict(), f)
 
     def load(self, filename):
         state_dict = torch.load('%s.model' % filename, map_location=lambda storage, loc: storage)
         self.network.load_state_dict(state_dict)
         with open('%s.stats' % (filename), 'rb') as f:
             self.config.state_normalizer.load_state_dict(pickle.load(f))
-
-    # def eval_step(self, state):
-    #     raise NotImplementedError
 
     def eval_episode(self):
         env = self.config.eval_env
@@ -80,54 +60,16 @@ class BaseAgent:
     #     else:
     #         raise NotImplementedError
 
-    def switch_task(self):
-        config = self.config
-        if not config.tasks:
-            return
-        segs = np.linspace(0, config.max_steps, len(config.tasks) + 1)
-        if self.total_steps > segs[self.task_ind + 1]:
-            self.task_ind += 1
-            self.task = config.tasks[self.task_ind]
-            self.states = self.task.reset()
-            self.states = config.state_normalizer(self.states)
-
-    # def record_episode(self, dir, env):
-    #     mkdir(dir)
-    #     steps = 0
-    #     state = env.reset()
-    #     while True:
-    #         self.record_obs(env, dir, steps)
-    #         action = self.record_step(state)
-    #         state, reward, done, info = env.step(action)
-    #         ret = info[0]['episodic_return']
-    #         steps += 1
-    #         if ret is not None:
-    #             break
-    #
-    # def record_step(self, state):
-    #     raise NotImplementedError
-    #
-    # # For DMControl
-    # def record_obs(self, env, dir, steps):
-    #     env = env.env.envs[0]
-    #     obs = env.render(mode='rgb_array')
-    #     imsave('%s/%04d.png' % (dir, steps), obs)
-
-
 class A2CAgent(BaseAgent):
     def __init__(self, config):
         BaseAgent.__init__(self, config)
         self.config = config
-        # self.task = config.task_fn()
         self.env = Env('reacher.app')
-        # self.network = config.network_fn()
-        # self.optimizer = config.optimizer_fn(self.network.parameters())
-
         self.network = GaussianActorCriticNet(
             self.env.state_size, self.env.action_size)
         self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
         self.total_steps = 0
-        self.states, _, _ = self.env.reset(train_mode=False)  # self.task.reset()
+        self.states, _, _ = self.env.reset(train_mode=False)
 
     def tensor(self, x):
         if isinstance(x, torch.Tensor):
@@ -147,21 +89,16 @@ class A2CAgent(BaseAgent):
         scores = np.zeros(self.env.num_agents)
 
         for t in range(config.rollout_length):
-            # prediction = self.network(config.state_normalizer(states))
-            prediction = self.network(states)
-            # pa = prediction['action'] #.cpu().detach().numpy()
-            # pa = self.to_np(pa)
-            # next_states, rewards, terminals, info = self.env.transition(pa)  # self.to_np(prediction['action']))
-            rewards, next_states, terminals = self.env.transition(self.to_np(prediction['action']))
-            # list 20, ndarray 20,33, list 20 bool
+            prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
+            rewards, next_states, terminals = self.env.transition(self.to_np(prediction['action'])) # list 20, ndarray 20,33, list 20 bool
             # self.record_online_return(info)
-            rewards = config.reward_normalizer(rewards)
+            # rewards = rewards # no normalization
             storage.feed(prediction)
             storage.feed({'reward': self.tensor(rewards).unsqueeze(-1),
                          'mask': (1 - self.tensor(list(map(int, terminals)))).unsqueeze(-1)})
 
             states = next_states
-            self.total_steps += self.env.num_agents #config.num_workers
+            self.total_steps += self.env.num_agents
 
             scores += rewards
             # if np.any(terminals) or t == config.rollout_length - 1:
@@ -176,7 +113,7 @@ class A2CAgent(BaseAgent):
                 break
 
         self.states = states
-        prediction = self.network(states)
+        prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
         storage.feed(prediction)
         storage.placeholder()
 
@@ -193,7 +130,7 @@ class A2CAgent(BaseAgent):
             storage.advantage[i] = advantages.detach()
             storage.ret[i] = returns.detach()
 
-        entries = storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy'])
+        entries = storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy']) #tensor 100,1
         policy_loss = -(entries.log_pi_a * entries.advantage).mean()
         value_loss = 0.5 * (entries.ret - entries.v).pow(2).mean()
         entropy_loss = entries.entropy.mean()

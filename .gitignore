@@ -127,3 +127,4 @@ dmypy.json
 Reacher.app/
 .idea/
 log/
+data/
