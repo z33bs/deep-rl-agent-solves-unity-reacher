@@ -33,7 +33,7 @@ def set_one_thread():
 mkdir('log')
 mkdir('tf_log')
 set_one_thread()
-random_seed()
+random_seed(333)
 # -1 is CPU, a positive integer is the index of GPU
 select_device(-1)
 
