@@ -143,11 +143,14 @@ class A2CAgent(BaseAgent):
         config = self.config
         storage = Storage(config.rollout_length)
         states = self.states
-        for _ in range(config.rollout_length):
+
+        scores = np.zeros(self.env.num_agents)
+
+        for t in range(config.rollout_length):
             # prediction = self.network(config.state_normalizer(states))
             prediction = self.network(states)
-            pa = prediction['action'] #.cpu().detach().numpy()
-            pa = self.to_np(pa)
+            # pa = prediction['action'] #.cpu().detach().numpy()
+            # pa = self.to_np(pa)
             # next_states, rewards, terminals, info = self.env.transition(pa)  # self.to_np(prediction['action']))
             rewards, next_states, terminals = self.env.transition(self.to_np(prediction['action']))
             # list 20, ndarray 20,33, list 20 bool
@@ -160,6 +163,18 @@ class A2CAgent(BaseAgent):
             states = next_states
             self.total_steps += self.env.num_agents #config.num_workers
 
+            scores += rewards
+            # if np.any(terminals) or t == config.rollout_length - 1:
+            if t == config.rollout_length - 1:
+            # print('Episode: {} Total score this episode: {} Last {} average: {}'
+                #       .format(i + 1, last_mean_reward, min(i + 1, 100),last_average))
+                # print('Episode: ?, rl {} Total score this episode: {}'
+                #       .format(t, np.mean(scores)))
+                ret = np.mean(scores)
+                # self.logger.add_scalar('episodic_return_train', ret, self.total_steps)
+                self.logger.info('steps %d, episodic_return_train %s' % (self.total_steps, ret))
+                break
+
         self.states = states
         prediction = self.network(states)
         storage.feed(prediction)
@@ -168,6 +183,7 @@ class A2CAgent(BaseAgent):
         advantages = self.tensor(np.zeros((self.env.num_agents, 1)))
         returns = prediction['v'].detach()
         for i in reversed(range(config.rollout_length)):
+        # for i in reversed(range(len(storage.reward))):
             returns = storage.reward[i] + config.discount * storage.mask[i] * returns
             if not config.use_gae:
                 advantages = returns - storage.v[i].detach()
