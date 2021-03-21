@@ -50,7 +50,6 @@ class A2CAgent:
 
         self.states = states
         prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
-        storage.feed(prediction)
         storage.placeholder()
 
         advantages = self.tensor(np.zeros((self.env.num_agents, 1)))
@@ -61,7 +60,8 @@ class A2CAgent:
             if not self.config.use_gae:
                 advantages = returns - storage.v[i].detach()
             else:
-                td_error = storage.reward[i] + self.config.discount * storage.mask[i] * storage.v[i + 1] - storage.v[i]
+                # td_error = storage.reward[i] + self.config.discount * storage.mask[i] * storage.v[i + 1] - storage.v[i]
+                td_error = storage.reward[i] + self.config.discount * storage.mask[i] * prediction['v'] - storage.v[i]
                 advantages = advantages * self.config.gae_tau * self.config.discount * storage.mask[i] + td_error
             storage.advantage[i] = advantages.detach()
             storage.ret[i] = returns.detach()
