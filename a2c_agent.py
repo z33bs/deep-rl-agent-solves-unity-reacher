@@ -23,36 +23,38 @@ class A2CAgent:
         self.states, _, _ = self.env.reset(train_mode=False)
         self.scores = np.zeros(self.env.num_agents)
         self.done = False
+        self.storage = Storage()
 
     def reset(self, train_mode=True):
         self.states, _, _ = self.env.reset(train_mode)
         self.scores = np.zeros(self.env.num_agents)
 
     def step(self):
-        storage = Storage()
+        self.storage.reset()
         states = self.states
 
-        for t in range(self.config.rollout_length):
+        t = 0
+        while self.scores.mean() < 0.1 or t < self.config.rollout_length:
             prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
             rewards, next_states, terminals = self.env.transition(
                 self.to_np(prediction['action']))  # list 20, ndarray 20,33, list 20 bool
             # rewards = rewards # no normalization
-            storage.feed(prediction)
-            storage.feed({'reward': self.tensor(rewards).unsqueeze(-1),
-                          'mask': (1 - self.tensor(list(map(int, terminals)))).unsqueeze(-1)})
+            self.storage.feed(prediction)
+            self.storage.feed({'reward': self.tensor(rewards).unsqueeze(-1),
+                               'mask': (1 - self.tensor(list(map(int, terminals)))).unsqueeze(-1)})
 
             states = next_states
             self.total_steps += self.env.num_agents
 
             self.scores += rewards
+            t += 1
 
         self.states = states
         prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
-        # storage.placeholder()  # empty 'advantage' 'ret'
 
         advantages = self.tensor(np.zeros((self.env.num_agents, 1)))
-        storage.advantage = [np.empty_like(advantages)] * len(storage.reward)
-        storage.ret = [np.empty_like(advantages)] * len(storage.reward)
+        self.storage.advantage = [np.empty_like(advantages)] * len(self.storage.reward)
+        self.storage.ret = [np.empty_like(advantages)] * len(self.storage.reward)
 
         if not np.any(terminals):  # if episode not complete estimate future rewards
             returns = prediction['v'].detach()
@@ -60,16 +62,17 @@ class A2CAgent:
             returns = 0
 
         for i in reversed(range(self.config.rollout_length)):
-            returns = storage.reward[i] + self.config.discount * storage.mask[i] * returns
+            returns = self.storage.reward[i] + self.config.discount * self.storage.mask[i] * returns
             if not self.config.use_gae:
-                advantages = returns - storage.v[i].detach()
+                advantages = returns - self.storage.v[i].detach()
             else:
-                td_error = storage.reward[i] + self.config.discount * storage.mask[i] * prediction['v'] - storage.v[i]
-                advantages = advantages * self.config.gae_tau * self.config.discount * storage.mask[i] + td_error
-            storage.advantage[i] = advantages.detach()
-            storage.ret[i] = returns.detach()
+                td_error = self.storage.reward[i] + self.config.discount * self.storage.mask[i] * prediction['v'] - \
+                           self.storage.v[i]
+                advantages = advantages * self.config.gae_tau * self.config.discount * self.storage.mask[i] + td_error
+            self.storage.advantage[i] = advantages.detach()
+            self.storage.ret[i] = returns.detach()
 
-        entries = storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy'])  # tensor 100,1
+        entries = self.storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy'])  # tensor 100,1
         policy_loss = -(entries.log_pi_a * entries.advantage).mean()
         value_loss = 0.5 * (entries.ret - entries.v).pow(2).mean()
         entropy_loss = entries.entropy.mean()
@@ -80,9 +83,6 @@ class A2CAgent:
         nn.utils.clip_grad_norm_(self.network.parameters(), self.config.gradient_clip)
         self.optimizer.step()
 
-        # test = np.any(terminals)
-        # if test:
-        #     found = True
         return np.any(terminals)
 
     def save(self, filename):
