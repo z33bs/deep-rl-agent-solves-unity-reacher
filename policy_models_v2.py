@@ -68,6 +68,7 @@ class GaussianActorCriticNet(nn.Module):
     def __init__(self,
                  state_dim,
                  action_dim,
+                 hidden_dim
                  # phi_body=None,
                  # actor_body=None,
                  # critic_body=None
@@ -77,8 +78,8 @@ class GaussianActorCriticNet(nn.Module):
         # if actor_body is None: actor_body = DummyBody(phi_body.feature_dim)
         # if critic_body is None: critic_body = DummyBody(phi_body.feature_dim)
         # self.phi_body = phi_body
-        self.actor_body = FCBody(state_dim)
-        self.critic_body = FCBody(state_dim)
+        self.actor_body = FCBody(state_dim, hidden_dim)
+        self.critic_body = FCBody(state_dim, hidden_dim)
         self.fc_action = layer_init(nn.Linear(self.actor_body.feature_dim, action_dim), 1e-3)
         self.fc_critic = layer_init(nn.Linear(self.critic_body.feature_dim, 1), 1e-3)
         self.std = nn.Parameter(torch.zeros(action_dim))

@@ -17,13 +17,15 @@ class A2CAgent:
 
         self.config = config
         self.env = env
-        self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size)
+        self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size, (128, 128))
         self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
         self.total_steps = 0
         self.states, _, _ = self.env.reset(train_mode=False)
         self.scores = np.zeros(self.env.num_agents)
         self.done = False
         self.storage = Storage()
+
+        self.running_rewards = collections.deque(500*[0], 500)
 
     def reset(self, train_mode=True):
         self.states, _, _ = self.env.reset(train_mode)
