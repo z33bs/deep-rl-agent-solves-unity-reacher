@@ -42,6 +42,7 @@ agent_last_steps = 0
 # progress log avg score over x steps
 # flexi n bootstrap
 # if terminate, then no need for last step
+# importable log for plotting
 
 while True:
     episode += 1
@@ -50,8 +51,8 @@ while True:
     if config.log_interval and not agent.total_steps % config.log_interval:
         print('steps %d, %.2f steps/s' % (agent.total_steps, config.log_interval / (time.time() - t0)))
         t0 = time.time()
-    if config.max_steps and agent.total_steps >= config.max_steps:
-        agent.save('data/%s-%s-%s-%d' % (t0, agent_name, config.tag, agent.total_steps))
+    if config.max_episodes and episode - 1 >= config.max_episodes:
+        agent.save('data/%s-final-%.2f' % (config.tag, eval_scores[-1]))
         break
 
     is_done = agent.step()

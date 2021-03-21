@@ -14,10 +14,9 @@ class Config:
         self.entropy_weight = 0.01
         self.rollout_length = 5
         self.gradient_clip = 5
-        self.max_steps = int(2e7)
         self.log_level = 0
         self.tag = 'vanilla'
         self.value_loss_weight = 1.0
-        # self.iteration_log_interval = 30
         self.log_interval = 10000  # int(1e3)
         self.save_interval = None
+        self.max_episodes = 10
