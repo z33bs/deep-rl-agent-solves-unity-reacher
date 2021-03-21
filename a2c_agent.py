@@ -29,19 +29,17 @@ class A2CAgent:
         self.scores = np.zeros(self.env.num_agents)
 
     def step(self):
-        storage = Storage(self.config.rollout_length)
+        storage = Storage()
         states = self.states
-
-
 
         for t in range(self.config.rollout_length):
             prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
-            rewards, next_states, terminals = self.env.transition(self.to_np(prediction['action'])) # list 20, ndarray 20,33, list 20 bool
-            # self.record_online_return(info)
+            rewards, next_states, terminals = self.env.transition(
+                self.to_np(prediction['action']))  # list 20, ndarray 20,33, list 20 bool
             # rewards = rewards # no normalization
             storage.feed(prediction)
             storage.feed({'reward': self.tensor(rewards).unsqueeze(-1),
-                         'mask': (1 - self.tensor(list(map(int, terminals)))).unsqueeze(-1)})
+                          'mask': (1 - self.tensor(list(map(int, terminals)))).unsqueeze(-1)})
 
             states = next_states
             self.total_steps += self.env.num_agents
@@ -50,23 +48,28 @@ class A2CAgent:
 
         self.states = states
         prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
-        storage.placeholder()
+        # storage.placeholder()  # empty 'advantage' 'ret'
 
         advantages = self.tensor(np.zeros((self.env.num_agents, 1)))
-        returns = prediction['v'].detach()
+        storage.advantage = [np.empty_like(advantages)] * len(storage.reward)
+        storage.ret = [np.empty_like(advantages)] * len(storage.reward)
+
+        if not np.any(terminals):  # if episode not complete estimate future rewards
+            returns = prediction['v'].detach()
+        else:
+            returns = 0
+
         for i in reversed(range(self.config.rollout_length)):
-        # for i in reversed(range(len(storage.reward))):
             returns = storage.reward[i] + self.config.discount * storage.mask[i] * returns
             if not self.config.use_gae:
                 advantages = returns - storage.v[i].detach()
             else:
-                # td_error = storage.reward[i] + self.config.discount * storage.mask[i] * storage.v[i + 1] - storage.v[i]
                 td_error = storage.reward[i] + self.config.discount * storage.mask[i] * prediction['v'] - storage.v[i]
                 advantages = advantages * self.config.gae_tau * self.config.discount * storage.mask[i] + td_error
             storage.advantage[i] = advantages.detach()
             storage.ret[i] = returns.detach()
 
-        entries = storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy']) #tensor 100,1
+        entries = storage.extract(['log_pi_a', 'v', 'ret', 'advantage', 'entropy'])  # tensor 100,1
         policy_loss = -(entries.log_pi_a * entries.advantage).mean()
         value_loss = 0.5 * (entries.ret - entries.v).pow(2).mean()
         entropy_loss = entries.entropy.mean()
@@ -91,7 +94,6 @@ class A2CAgent:
         with open('%s.stats' % (filename), 'rb') as f:
             self.config.state_normalizer.load_state_dict(pickle.load(f))
 
-
     # def record_online_return(self, info, offset=0):
     #     if isinstance(info, dict):
     #         ret = info['episodic_return']
@@ -113,4 +115,3 @@ class A2CAgent:
 
     def to_np(self, t):
         return t.cpu().detach().numpy()
-
