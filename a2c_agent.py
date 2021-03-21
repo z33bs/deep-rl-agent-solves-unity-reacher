@@ -7,7 +7,7 @@ from config import Config
 import pickle
 import torch.nn as nn
 import logger
-
+import collections
 
 class A2CAgent:
     def __init__(self, config, env):
@@ -49,21 +49,22 @@ class A2CAgent:
             self.total_steps += self.env.num_agents
 
             self.scores += rewards
+            self.running_rewards.append(np.array(rewards).mean())
             t += 1
 
         self.states = states
         prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
 
         advantages = self.tensor(np.zeros((self.env.num_agents, 1)))
-        self.storage.advantage = [np.empty_like(advantages)] * len(self.storage.reward)
-        self.storage.ret = [np.empty_like(advantages)] * len(self.storage.reward)
+        self.storage.advantage = [torch.zeros(self.env.num_agents, 1)]*len(self.storage.reward)
+        self.storage.ret = [torch.zeros(self.env.num_agents, 1)]*len(self.storage.reward)
 
         if not np.any(terminals):  # if episode not complete estimate future rewards
             returns = prediction['v'].detach()
         else:
             returns = 0
 
-        for i in reversed(range(self.config.rollout_length)):
+        for i in reversed(range(t)):
             returns = self.storage.reward[i] + self.config.discount * self.storage.mask[i] * returns
             if not self.config.use_gae:
                 advantages = returns - self.storage.v[i].detach()
