@@ -16,7 +16,7 @@ class A2CAgent:
         self.task_ind = 0
 
         self.config = config
-        self.env = Env('reacher.app')
+        self.env = Env('reacher.app', is_mock=True)
         self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size)
         self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
         self.total_steps = 0
