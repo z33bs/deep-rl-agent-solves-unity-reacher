@@ -17,7 +17,7 @@ class A2CAgent:
 
         self.config = config
         self.env = env
-        self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size, (128, 128))
+        self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size, self.config.hidden_dim)
         self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
         self.total_steps = 0
         self.states, _, _ = self.env.reset(train_mode=False)

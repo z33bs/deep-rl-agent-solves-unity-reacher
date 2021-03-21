@@ -8,6 +8,7 @@ class Config:
     def __init__(self):
         # note one episode lasts 100 000 steps
         self.is_mock = False
+        self.hidden_dim = (128, 128)
         self.discount = 0.99
         self.use_gae = True
         self.gae_tau = 1.0
