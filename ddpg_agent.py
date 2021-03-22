@@ -119,7 +119,7 @@ class Agent():
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
         # optional - clip grad if unstable
-        # torch.nn.utils.clip_grad_norm(self.critic_local.parameters(), 1)
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
