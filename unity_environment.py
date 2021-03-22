@@ -42,3 +42,7 @@ class Env:
             done = self.env_info.local_done
 
             return reward, self.state, done
+
+    def close(self):
+        if not self.is_mock:
+            self.env.close()
