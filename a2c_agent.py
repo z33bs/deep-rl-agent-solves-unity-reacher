@@ -18,25 +18,35 @@ class A2CAgent:
         self.config = config
         self.env = env
         self.network = GaussianActorCriticNet(self.env.state_size, self.env.action_size, self.config.hidden_dim)
-        self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
+        # self.optimizer = torch.optim.RMSprop(self.network.parameters(), lr=0.0007)
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=3e-4, eps=1.e-5)
         self.total_steps = 0
         self.states, _, _ = self.env.reset(train_mode=False)
         self.scores = np.zeros(self.env.num_agents)
         self.done = False
         self.storage = Storage()
 
-        self.running_rewards = collections.deque(500*[0], 500)
+        self.running_rewards = []  # collections.deque(500*[0], 500)
+        self.rollout_reward_threshold = self.config.rollout_min_reward_start
+        self.running_rollout_t = collections.deque([0]*25, 25)
+        self.running_loss = collections.deque([0.] * 25, 25)
 
     def reset(self, train_mode=True):
         self.states, _, _ = self.env.reset(train_mode)
         self.scores = np.zeros(self.env.num_agents)
+        self.rollout_reward_threshold += self.config.rollout_min_reward_incr
 
     def step(self):
         self.storage.reset()
         states = self.states
 
         t = 0
-        while self.scores.mean() < 0.1 or t < self.config.rollout_length:
+        self.running_rewards = []
+        should_roll = t < self.config.rollout_length
+        if self.config.use_rollout_reward_threshold:
+            should_roll = should_roll or np.array(self.running_rewards).sum() < min(self.rollout_reward_threshold,
+                                                       self.config.rollout_min_reward_max)
+        while should_roll:
             prediction = self.network(states)  # 'action' 'log_pi_a' 'entropy' 'mean' 'v'
             rewards, next_states, terminals = self.env.transition(
                 self.to_np(prediction['action']))  # list 20, ndarray 20,33, list 20 bool
@@ -81,11 +91,14 @@ class A2CAgent:
         entropy_loss = entries.entropy.mean()
 
         self.optimizer.zero_grad()
-        (policy_loss - self.config.entropy_weight * entropy_loss +
-         self.config.value_loss_weight * value_loss).backward()
+        loss = (policy_loss - self.config.entropy_weight * entropy_loss +
+                self.config.value_loss_weight * value_loss)
+        loss.backward()
         nn.utils.clip_grad_norm_(self.network.parameters(), self.config.gradient_clip)
         self.optimizer.step()
 
+        self.running_loss.append(loss.detach())
+        self.running_rollout_t.append(t)
         return np.any(terminals)
 
     def save(self, filename):

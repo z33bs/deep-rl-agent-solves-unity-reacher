@@ -45,8 +45,9 @@ try:
         if config.save_interval and not agent.total_steps % config.save_interval:
             agent.save('data/%s-%s-%s-%d' % (t0, agent_name, config.tag, agent.total_steps))
         if config.log_interval and not agent.total_steps % config.log_interval:
-            sys.stdout.write('\r steps %d, running reward: %.4f, %.2f steps/s' % (
-                agent.total_steps, np.array(agent.running_rewards).mean(), config.log_interval / (time.time() - t0)))
+            sys.stdout.write('\r steps %d, running reward: %.4f, rollout: %d, %.2f steps/s' % (
+                agent.total_steps, np.array(agent.running_rewards).sum(), np.array(agent.running_rollout_t).mean()
+                , config.log_interval / (time.time() - t0)))
             # print('steps %d, running reward: %d, %.2f steps/s' % (
             #     agent.total_steps, np.array(agent.running_rewards).mean(), config.log_interval / (time.time() - t0))
             #       , end='\r')
