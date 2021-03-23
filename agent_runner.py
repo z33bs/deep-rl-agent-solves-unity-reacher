@@ -111,12 +111,13 @@ if __name__ == '__main__':
     parser.add_argument('--mode', type=str, default='train')
     parser.add_argument('--env', type=str, default='reacher.app')
     parser.add_argument('--mock', type=bool, default=False)
-    parser.add_argument('--load', type=str)
+    parser.add_argument('--load', type=str, default=None)
+    parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
 
-    env = Env('reacher.app', is_mock=args.mock)
+    env = Env(args.env, is_mock=args.mock)
 
-    agent = Agent(env.state_size, env.action_size, 333)
+    agent = Agent(env.state_size, env.action_size, env.num_agents, args.seed, args.load)
 
     if args.mode is not 'train':
         agent.load()
