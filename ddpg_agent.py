@@ -158,11 +158,11 @@ class Agent():
 
     def load(self, path='data/ddpg_agent'):
         """path includes prefix of filename, will add _actor.pth and _critic.pth"""
-        self.actor_local.load_state_dict(torch.load(path + '_actor.pth'))
-        self.actor_target.load_state_dict(torch.load(path + '_actor.pth'))
+        self.actor_local.load_state_dict(torch.load(path + '_actor.pth', map_location=torch.device(device)))
+        self.actor_target.load_state_dict(torch.load(path + '_actor.pth', map_location=torch.device(device)))
 
-        self.critic_local.load_state_dict(torch.load(path + '_critic.pth'))
-        self.critic_target.load_state_dict(torch.load(path + '_critic.pth'))
+        self.critic_local.load_state_dict(torch.load(path + '_critic.pth', map_location=torch.device(device)))
+        self.critic_target.load_state_dict(torch.load(path + '_critic.pth', map_location=torch.device(device)))
 
 
 class OUNoise:

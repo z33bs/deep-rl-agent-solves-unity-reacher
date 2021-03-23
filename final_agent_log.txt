@@ -1,0 +1,159 @@
+Episode: 	1 	Score: 	0.85 	Average Score: 	0.85
+Episode: 	2 	Score: 	0.94 	Average Score: 	0.90
+Episode: 	3 	Score: 	0.88 	Average Score: 	0.89
+Episode: 	4 	Score: 	1.18 	Average Score: 	0.97
+Episode: 	5 	Score: 	1.43 	Average Score: 	1.06
+Episode: 	6 	Score: 	1.22 	Average Score: 	1.08
+Episode: 	7 	Score: 	1.36 	Average Score: 	1.12
+Episode: 	8 	Score: 	0.92 	Average Score: 	1.10
+Episode: 	9 	Score: 	1.19 	Average Score: 	1.11
+Episode: 	10 	Score: 	1.25 	Average Score: 	1.12
+Episode: 	11 	Score: 	0.95 	Average Score: 	1.11
+Episode: 	12 	Score: 	1.12 	Average Score: 	1.11
+Episode: 	13 	Score: 	1.30 	Average Score: 	1.12
+Episode: 	14 	Score: 	1.67 	Average Score: 	1.16
+Episode: 	15 	Score: 	1.95 	Average Score: 	1.21
+Episode: 	16 	Score: 	1.87 	Average Score: 	1.25
+Episode: 	17 	Score: 	2.12 	Average Score: 	1.31
+Episode: 	18 	Score: 	2.20 	Average Score: 	1.35
+Episode: 	19 	Score: 	2.51 	Average Score: 	1.42
+Episode: 	20 	Score: 	2.36 	Average Score: 	1.46
+Episode: 	21 	Score: 	3.15 	Average Score: 	1.54
+Episode: 	22 	Score: 	3.12 	Average Score: 	1.61
+Episode: 	23 	Score: 	2.99 	Average Score: 	1.67
+Episode: 	24 	Score: 	3.43 	Average Score: 	1.75
+Episode: 	25 	Score: 	3.66 	Average Score: 	1.82
+Episode: 	26 	Score: 	3.74 	Average Score: 	1.90
+Episode: 	27 	Score: 	4.76 	Average Score: 	2.00
+Episode: 	28 	Score: 	5.25 	Average Score: 	2.12
+Episode: 	29 	Score: 	6.31 	Average Score: 	2.26
+Episode: 	30 	Score: 	5.21 	Average Score: 	2.36
+Episode: 	31 	Score: 	7.40 	Average Score: 	2.53
+Episode: 	32 	Score: 	6.18 	Average Score: 	2.64
+Episode: 	33 	Score: 	9.01 	Average Score: 	2.83
+Episode: 	34 	Score: 	7.53 	Average Score: 	2.97
+Episode: 	35 	Score: 	7.52 	Average Score: 	3.10
+Episode: 	36 	Score: 	6.43 	Average Score: 	3.19
+Episode: 	37 	Score: 	7.12 	Average Score: 	3.30
+Episode: 	38 	Score: 	7.59 	Average Score: 	3.41
+Episode: 	39 	Score: 	7.63 	Average Score: 	3.52
+Episode: 	40 	Score: 	9.32 	Average Score: 	3.67
+Episode: 	41 	Score: 	8.22 	Average Score: 	3.78
+Episode: 	42 	Score: 	10.58 	Average Score: 	3.94
+Episode: 	43 	Score: 	12.64 	Average Score: 	4.14
+Episode: 	44 	Score: 	9.61 	Average Score: 	4.27
+Episode: 	45 	Score: 	10.26 	Average Score: 	4.40
+Episode: 	46 	Score: 	9.98 	Average Score: 	4.52
+Episode: 	47 	Score: 	10.38 	Average Score: 	4.64
+Episode: 	48 	Score: 	10.01 	Average Score: 	4.76
+Episode: 	49 	Score: 	9.60 	Average Score: 	4.86
+Episode: 	50 	Score: 	12.16 	Average Score: 	5.00
+Episode: 	51 	Score: 	11.80 	Average Score: 	5.13
+Episode: 	52 	Score: 	12.89 	Average Score: 	5.28
+Episode: 	53 	Score: 	13.12 	Average Score: 	5.43
+Episode: 	54 	Score: 	15.44 	Average Score: 	5.62
+Episode: 	55 	Score: 	16.95 	Average Score: 	5.82
+Episode: 	56 	Score: 	17.76 	Average Score: 	6.04
+Episode: 	57 	Score: 	15.27 	Average Score: 	6.20
+Episode: 	58 	Score: 	16.89 	Average Score: 	6.38
+Episode: 	59 	Score: 	14.68 	Average Score: 	6.52
+Episode: 	60 	Score: 	16.78 	Average Score: 	6.69
+Episode: 	61 	Score: 	20.01 	Average Score: 	6.91
+Episode: 	62 	Score: 	20.14 	Average Score: 	7.13
+Episode: 	63 	Score: 	19.21 	Average Score: 	7.32
+Episode: 	64 	Score: 	19.67 	Average Score: 	7.51
+Episode: 	65 	Score: 	21.60 	Average Score: 	7.73
+Episode: 	66 	Score: 	22.72 	Average Score: 	7.95
+Episode: 	67 	Score: 	21.85 	Average Score: 	8.16
+Episode: 	68 	Score: 	21.73 	Average Score: 	8.36
+Episode: 	69 	Score: 	21.96 	Average Score: 	8.56
+Episode: 	70 	Score: 	21.76 	Average Score: 	8.75
+Episode: 	71 	Score: 	23.75 	Average Score: 	8.96
+Episode: 	72 	Score: 	26.87 	Average Score: 	9.21
+Episode: 	73 	Score: 	26.87 	Average Score: 	9.45
+Episode: 	74 	Score: 	25.22 	Average Score: 	9.66
+Episode: 	75 	Score: 	23.83 	Average Score: 	9.85
+Episode: 	76 	Score: 	23.40 	Average Score: 	10.03
+Episode: 	77 	Score: 	24.42 	Average Score: 	10.22
+Episode: 	78 	Score: 	23.74 	Average Score: 	10.39
+Episode: 	79 	Score: 	24.94 	Average Score: 	10.57
+Episode: 	80 	Score: 	25.57 	Average Score: 	10.76
+Episode: 	81 	Score: 	27.71 	Average Score: 	10.97
+Episode: 	82 	Score: 	25.81 	Average Score: 	11.15
+Episode: 	83 	Score: 	27.11 	Average Score: 	11.34
+Episode: 	84 	Score: 	27.51 	Average Score: 	11.54
+Episode: 	85 	Score: 	25.36 	Average Score: 	11.70
+Episode: 	86 	Score: 	25.97 	Average Score: 	11.86
+Episode: 	87 	Score: 	27.58 	Average Score: 	12.05
+Episode: 	88 	Score: 	27.35 	Average Score: 	12.22
+Episode: 	89 	Score: 	26.52 	Average Score: 	12.38
+Episode: 	90 	Score: 	28.24 	Average Score: 	12.56
+Episode: 	91 	Score: 	28.64 	Average Score: 	12.73
+Episode: 	92 	Score: 	28.80 	Average Score: 	12.91
+Episode: 	93 	Score: 	30.08 	Average Score: 	13.09
+Episode: 	94 	Score: 	29.86 	Average Score: 	13.27
+Episode: 	95 	Score: 	28.91 	Average Score: 	13.44
+Episode: 	96 	Score: 	31.36 	Average Score: 	13.62
+Episode: 	97 	Score: 	30.67 	Average Score: 	13.80
+Episode: 	98 	Score: 	31.77 	Average Score: 	13.98
+Episode: 	99 	Score: 	29.16 	Average Score: 	14.13
+Episode: 	100 	Score: 	29.12 	Average Score: 	14.28
+Episode: 	101 	Score: 	30.63 	Average Score: 	14.58
+Episode: 	102 	Score: 	33.71 	Average Score: 	14.91
+Episode: 	103 	Score: 	33.10 	Average Score: 	15.23
+Episode: 	104 	Score: 	29.58 	Average Score: 	15.52
+Episode: 	105 	Score: 	30.47 	Average Score: 	15.81
+Episode: 	106 	Score: 	31.53 	Average Score: 	16.11
+Episode: 	107 	Score: 	27.62 	Average Score: 	16.37
+Episode: 	108 	Score: 	32.78 	Average Score: 	16.69
+Episode: 	109 	Score: 	34.71 	Average Score: 	17.03
+Episode: 	110 	Score: 	30.38 	Average Score: 	17.32
+Episode: 	111 	Score: 	28.14 	Average Score: 	17.59
+Episode: 	112 	Score: 	27.36 	Average Score: 	17.85
+Episode: 	113 	Score: 	31.77 	Average Score: 	18.16
+Episode: 	114 	Score: 	33.81 	Average Score: 	18.48
+Episode: 	115 	Score: 	33.85 	Average Score: 	18.80
+Episode: 	116 	Score: 	34.39 	Average Score: 	19.12
+Episode: 	117 	Score: 	31.95 	Average Score: 	19.42
+Episode: 	118 	Score: 	33.60 	Average Score: 	19.73
+Episode: 	119 	Score: 	34.18 	Average Score: 	20.05
+Episode: 	120 	Score: 	35.66 	Average Score: 	20.38
+Episode: 	121 	Score: 	34.06 	Average Score: 	20.69
+Episode: 	122 	Score: 	34.92 	Average Score: 	21.01
+Episode: 	123 	Score: 	34.81 	Average Score: 	21.33
+Episode: 	124 	Score: 	35.55 	Average Score: 	21.65
+Episode: 	125 	Score: 	33.75 	Average Score: 	21.95
+Episode: 	126 	Score: 	34.56 	Average Score: 	22.26
+Episode: 	127 	Score: 	33.59 	Average Score: 	22.55
+Episode: 	128 	Score: 	33.29 	Average Score: 	22.83
+Episode: 	129 	Score: 	35.32 	Average Score: 	23.12
+Episode: 	130 	Score: 	32.57 	Average Score: 	23.39
+Episode: 	131 	Score: 	33.17 	Average Score: 	23.65
+Episode: 	132 	Score: 	32.55 	Average Score: 	23.91
+Episode: 	133 	Score: 	34.97 	Average Score: 	24.17
+Episode: 	134 	Score: 	33.91 	Average Score: 	24.44
+Episode: 	135 	Score: 	35.32 	Average Score: 	24.71
+Episode: 	136 	Score: 	32.39 	Average Score: 	24.97
+Episode: 	137 	Score: 	34.38 	Average Score: 	25.25
+Episode: 	138 	Score: 	34.91 	Average Score: 	25.52
+Episode: 	139 	Score: 	35.47 	Average Score: 	25.80
+Episode: 	140 	Score: 	32.53 	Average Score: 	26.03
+Episode: 	141 	Score: 	29.96 	Average Score: 	26.25
+Episode: 	142 	Score: 	33.96 	Average Score: 	26.48
+Episode: 	143 	Score: 	35.83 	Average Score: 	26.71
+Episode: 	144 	Score: 	35.17 	Average Score: 	26.97
+Episode: 	145 	Score: 	32.74 	Average Score: 	27.19
+Episode: 	146 	Score: 	34.48 	Average Score: 	27.44
+Episode: 	147 	Score: 	34.44 	Average Score: 	27.68
+Episode: 	148 	Score: 	34.29 	Average Score: 	27.92
+Episode: 	149 	Score: 	34.09 	Average Score: 	28.17
+Episode: 	150 	Score: 	30.57 	Average Score: 	28.35
+Episode: 	151 	Score: 	31.84 	Average Score: 	28.55
+Episode: 	152 	Score: 	31.67 	Average Score: 	28.74
+Episode: 	153 	Score: 	32.25 	Average Score: 	28.93
+Episode: 	154 	Score: 	34.65 	Average Score: 	29.12
+Episode: 	155 	Score: 	35.19 	Average Score: 	29.31
+Episode: 	156 	Score: 	33.29 	Average Score: 	29.46
+Episode: 	157 	Score: 	33.98 	Average Score: 	29.65
+Episode: 	158 	Score: 	33.51 	Average Score: 	29.81
+Episode: 	159 	Score: 	33.63 	Average Score: 	30.00
