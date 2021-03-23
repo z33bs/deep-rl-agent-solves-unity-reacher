@@ -31,11 +31,11 @@ def train(env, agent):
             rewards, next_states, dones = env.transition(actions)
 
             t, l = agent.step(states, actions, np.expand_dims(np.array(rewards), axis=1),
-                       next_states,
-                       np.expand_dims(np.array(dones), axis=1))
+                              next_states,
+                              np.expand_dims(np.array(dones), axis=1))
 
             score += rewards
-            running_score.append(np.mean(score))
+            running_score.append(np.mean(rewards))
             states = next_states  # roll over the state to next time step
 
             print('Collection: {}   Learns: {}  Last 100 rewards: {}'.format(t, l, np.mean(running_score)), end='\r')
@@ -69,21 +69,31 @@ def train(env, agent):
     env.close()
 
 
+def plot_scores(path):
+    losses = np.genfromtxt(path)
+    losses = losses[~np.isnan(losses)].reshape(-1,3)
+    fig, ax = plt.subplots()
+    losses = np.array(losses)
+    plt.plot(losses.T[1], label='Score', alpha=0.5)
+    plt.plot(losses.T[2], label='100 episode average', alpha=0.5)
+    plt.plot([30]*len(losses), label='Target')
+    plt.title("Average Score over 20 agents")
+    plt.ylabel('Score')
+    plt.xlabel('Episode #')
+    plt.legend()
+    plt.show()
+
+
 def test(env, agent):
     for episode in range(3):
-        env_info = env.reset(train_mode=False)[brain_name]
-        states = env_info.vector_observations
-        score = np.zeros(n_agents)
+
+        score = np.zeros(env.num_agents)
 
         while True:
-            actions = agent.act(states, add_noise=False)
+            actions = agent.act(env.state, add_noise=False)
 
-            env_info = env.step(actions)[brain_name]
-            next_states = env_info.vector_observations
-            rewards = env_info.rewards
-            dones = env_info.local_done
+            rewards, states, dones = env.transition(actions)
             score += rewards
-            states = next_states
 
             if np.any(dones):
                 break
@@ -108,21 +118,31 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', type=str, default='train')
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'plot'])
     parser.add_argument('--env', type=str, default='reacher.app')
     parser.add_argument('--mock', type=bool, default=False)
-    parser.add_argument('--load', type=str)
+    parser.add_argument('--load', type=str, default=None)
+    parser.add_argument('--seed', type=int, default=round(time.time()))
     args = parser.parse_args()
 
-    env = Env('reacher.app', is_mock=args.mock)
-
-    agent = Agent(env.state_size, env.action_size, 333)
-
-    if args.mode is not 'train':
-        agent.load()
-        test(env, agent)
+    if args.mode == 'plot':
+        print('Plotting scores...\n')
+        plot_scores(args.load)
     else:
+
+        print('Loading environment and instantiating agent...\n')
+        env = Env(args.env, is_mock=args.mock)
         try:
-            train(env, agent)
+            agent = Agent(env.state_size, env.action_size, env.num_agents, args.seed, args.load)
+
+            if args.mode == 'test':
+                print("Running in evaluation mode...\n")
+                test(env, agent)
+            else:
+                print("Training agent...\n")
+                try:
+                    train(env, agent)
+                finally:
+                    agent.save()
         finally:
-            agent.save()
+            env.close()

@@ -36,15 +36,17 @@ My final model used the following hyper parameters:
 
 ## Results
 
-Figure below shows a plot of the score over time. The network performed extremely well, first exceeding a score of 30 after ? episodes, and maintaining above this average for 100 further episodes.
+Figure below shows a plot of the score over time. The network performed extremely well, first exceeding a score of 30 after 93 episodes, and maintaining above this average until the 100-episode-average exceeded 30 after 159 episodes. The network was still stable at this point with an episode score solidly in the 33 to 34 range.
 
 ![score over time](score.png)
 
 ## Future work
 
-I believe prioritized experience replay would help the network learn faster. 
+I believe prioritized experience replay would help the network learn faster. This would be my first addition.
+
+Another trick that might reduce accelarate the learning curve would be to do several batch sampling for every time-step of experience collection. Currently the model only does one batch after every trajectory collection. You could increase this supervised-learning step; however by doing this you risk creating instability due to diverging local and target networks. One might consider using ks-stopping like what OpenAI did with their PPO1 algorithm. 
 
 On the network architecture:
 
 * I could also get more fancy with weight initialisation like Kaimer
-* I could add dropout layers to ensure the network generalizes well (perhaps improving stability)
+* I could add dropout layers to ensure the network generalizes well (perhaps improving stability). This would likely be at the expense of a slower learning-curve.
